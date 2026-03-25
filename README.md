@@ -1,5 +1,8 @@
 # API para publicar productos en MercadoLibre (Argentina / MLA)
 
+<img width="615" height="791" alt="image" src="https://github.com/user-attachments/assets/c244bbc2-96de-468f-98b3-4898012e8ddc" />
+
+
 API lista para producción para publicar productos en MercadoLibre Argentina (`MLA`) usando:
 - autenticación OAuth con `access_token` y `refresh_token`
 - carga de imágenes
@@ -9,6 +12,7 @@ API lista para producción para publicar productos en MercadoLibre Argentina (`M
 
 Alcance actual:
 - publica solo **nuevas publicaciones**
+- Formulario visual para publicar
 - está orientada exclusivamente a **MercadoLibre Argentina (`MLA`)**
 
 ## 1. Stack técnico
