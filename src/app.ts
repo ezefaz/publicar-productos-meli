@@ -9,6 +9,7 @@ import { MercadoLibreClient } from './modules/mercadolibre/client';
 import { ProductPublisher } from './modules/publishing/product-publisher';
 import { categoriesRoutes } from './routes/categories';
 import { productsRoutes } from './routes/products';
+import { uiRoutes } from './routes/ui';
 
 export function buildApp() {
   const app = Fastify({ logger: true });
@@ -27,6 +28,7 @@ export function buildApp() {
 
   app.get('/health', async () => ({ status: 'ok' }));
 
+  uiRoutes(app);
   categoriesRoutes(app, categoryService);
   productsRoutes(app, productPublisher);
 

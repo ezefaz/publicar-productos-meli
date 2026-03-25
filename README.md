@@ -1,41 +1,42 @@
-# MercadoLibre Product Publisher API (Argentina / MLA)
+# API para publicar productos en MercadoLibre (Argentina / MLA)
 
-Production-ready API to publish products in MercadoLibre Argentina (`MLA`) using:
-- OAuth token management (access + refresh token)
-- image upload pipeline
-- category suggestion
-- required attributes validation per category
-- clear structured errors
+API lista para producción para publicar productos en MercadoLibre Argentina (`MLA`) usando:
+- autenticación OAuth con `access_token` y `refresh_token`
+- carga de imágenes
+- sugerencia de categorías
+- validación de atributos obligatorios por categoría
+- manejo claro de errores
 
-Current scope:
-- publishes **new listings only**
-- marketplace fixed to **Argentina (`MLA`)**
+Alcance actual:
+- publica solo **nuevas publicaciones**
+- está orientada exclusivamente a **MercadoLibre Argentina (`MLA`)**
 
-## 1. Tech stack
+## 1. Stack técnico
 - Node.js + TypeScript
 - Fastify
 - Zod
 - Sharp
 
-## 2. Requirements
-- Node.js 20+
-- A MercadoLibre developer app with:
-  - `APP_ID` (used as `ML_CLIENT_ID`)
-  - `CLIENT_SECRET` (used as `ML_CLIENT_SECRET`)
-  - Redirect URI configured in MercadoLibre developers panel
+## 2. Requisitos
+- Node.js 20 o superior
+- Una aplicación creada en MercadoLibre Developers con:
+  - `APP_ID` (se usa como `ML_CLIENT_ID`)
+  - `CLIENT_SECRET` (se usa como `ML_CLIENT_SECRET`)
+  - una `Redirect URI` configurada
 
-## 3. Install and run
+## 3. Instalación y ejecución
 ```bash
 npm install
 cp .env.example .env
 npm run dev
 ```
 
-Default base URL:
+URL base por defecto:
 - `http://localhost:3000`
+- Formulario visual simple: `http://localhost:3000/`
 
-## 4. Environment variables
-Edit `.env`:
+## 4. Variables de entorno
+Edita el archivo `.env`:
 
 ```env
 PORT=3000
@@ -45,12 +46,12 @@ ML_SITE_ID=MLA
 ML_API_BASE_URL=https://api.mercadolibre.com
 ML_OAUTH_TOKEN_URL=https://api.mercadolibre.com/oauth/token
 
-ML_CLIENT_ID=your_app_id
-ML_CLIENT_SECRET=your_client_secret
-ML_REDIRECT_URI=https://your-domain.com/oauth/callback
+ML_CLIENT_ID=tu_app_id
+ML_CLIENT_SECRET=tu_client_secret
+ML_REDIRECT_URI=https://tu-dominio.com/oauth/callback
 
-ML_ACCESS_TOKEN=your_access_token
-ML_REFRESH_TOKEN=your_refresh_token
+ML_ACCESS_TOKEN=tu_access_token
+ML_REFRESH_TOKEN=tu_refresh_token
 
 ML_DEFAULT_CURRENCY=ARS
 ML_DEFAULT_CONDITION=new
@@ -59,69 +60,70 @@ ML_DEFAULT_BUYING_MODE=buy_it_now
 ML_MAX_IMAGES=10
 ```
 
-Important:
-- `ML_CLIENT_ID` = MercadoLibre **App ID**
-- `ML_REDIRECT_URI` must match exactly the URI configured in your ML app
+Importante:
+- `ML_CLIENT_ID` es el **App ID** de tu aplicación de MercadoLibre
+- `ML_REDIRECT_URI` debe coincidir exactamente con la URI configurada en tu app de MercadoLibre
 
-## 5. How to get `access_token` and `refresh_token`
+## 5. Cómo obtener `access_token` y `refresh_token`
 
-If you do not have tokens yet, follow this OAuth flow.
+Si todavía no tienes los tokens, sigue este flujo OAuth.
 
-### Step 1: Open authorization URL
-Replace values and open in browser:
+### Paso 1. Abrir la URL de autorización
+Reemplaza los valores y abre esta URL en el navegador:
 
 ```text
-https://auth.mercadolibre.com.ar/authorization?response_type=code&client_id=YOUR_APP_ID&redirect_uri=YOUR_REDIRECT_URI
+https://auth.mercadolibre.com.ar/authorization?response_type=code&client_id=TU_APP_ID&redirect_uri=TU_REDIRECT_URI
 ```
 
-After login/consent, MercadoLibre redirects to:
-- `YOUR_REDIRECT_URI?code=AUTHORIZATION_CODE`
+Después de iniciar sesión y autorizar la aplicación, MercadoLibre redirige a:
 
-Copy the `code`.
+- `TU_REDIRECT_URI?code=AUTHORIZATION_CODE`
 
-### Step 2: Exchange `code` for tokens
+Copia el valor de `code`.
+
+### Paso 2. Intercambiar el `code` por tokens
 ```bash
 curl -X POST https://api.mercadolibre.com/oauth/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=authorization_code&client_id=YOUR_APP_ID&client_secret=YOUR_CLIENT_SECRET&code=AUTHORIZATION_CODE&redirect_uri=YOUR_REDIRECT_URI"
+  -d "grant_type=authorization_code&client_id=TU_APP_ID&client_secret=TU_CLIENT_SECRET&code=AUTHORIZATION_CODE&redirect_uri=TU_REDIRECT_URI"
 ```
 
-You get:
+La respuesta incluye:
 - `access_token`
 - `refresh_token`
 - `expires_in`
 
-Save both tokens in `.env`.
+Guarda ambos tokens en tu `.env`.
 
-### Step 3: Refresh when expired
+### Paso 3. Renovar tokens cuando vencen
 ```bash
 curl -X POST https://api.mercadolibre.com/oauth/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=refresh_token&client_id=YOUR_APP_ID&client_secret=YOUR_CLIENT_SECRET&refresh_token=YOUR_REFRESH_TOKEN"
+  -d "grant_type=refresh_token&client_id=TU_APP_ID&client_secret=TU_CLIENT_SECRET&refresh_token=TU_REFRESH_TOKEN"
 ```
 
-Update `.env` with the new:
+Actualiza tu `.env` con los nuevos valores:
 - `ML_ACCESS_TOKEN`
 - `ML_REFRESH_TOKEN`
 
-Notes:
-- This API already auto-refreshes token on `401`.
-- When that happens, publish response includes a warning so you update `.env` manually.
+Notas:
+- Esta API intenta refrescar el token automáticamente cuando recibe un `401`
+- Si eso ocurre, la respuesta de publicación devuelve un `warning` para que actualices manualmente tu `.env`
 
-## 6. API endpoints
+## 6. Endpoints de la API
 
-### 6.1 Health
+### 6.1 Verificación de salud
 `GET /health`
 
-Response:
+Respuesta:
 ```json
 { "status": "ok" }
 ```
 
-### 6.2 Category suggestion
+### 6.2 Buscar categorías
 `GET /categories/search?q=campera bomber`
 
-Response:
+Respuesta:
 ```json
 {
   "status": "success",
@@ -136,10 +138,10 @@ Response:
 }
 ```
 
-### 6.3 Required attributes for category
+### 6.3 Ver atributos obligatorios de una categoría
 `GET /categories/:categoryId/required-attributes`
 
-Response:
+Respuesta:
 ```json
 {
   "status": "success",
@@ -148,12 +150,12 @@ Response:
 }
 ```
 
-### 6.4 Conversational helper (single-shot validation)
+### 6.4 Asistente conversacional de validación
 `POST /products/collect`
 
-Use it to know what data is still missing before publishing.
+Sirve para saber qué información falta antes de publicar.
 
-Example request:
+Ejemplo de request:
 ```json
 {
   "title": "Campera deportiva bomber unisex",
@@ -163,7 +165,7 @@ Example request:
 }
 ```
 
-Example response:
+Ejemplo de respuesta:
 ```json
 {
   "status": "incomplete",
@@ -179,41 +181,41 @@ Example response:
 }
 ```
 
-### 6.5 Publish product
+### 6.5 Publicar producto
 `POST /products/publish`
 
 Content-Type:
 - `multipart/form-data`
 
-Expected fields:
+Campos esperados:
 - `title` (string)
 - `description` (string)
 - `price` (number)
-- `currency` (string, for MLA use `ARS`)
-- `available_quantity` (int > 0)
+- `currency` (string, para `MLA` usar `ARS`)
+- `available_quantity` (entero mayor a 0)
 - `category_id` (string)
-- `condition` (optional, default `new`)
-- `listing_type_id` (optional)
-- `buying_mode` (optional)
-- `attributes` (JSON array string)
-- `shipping` (optional JSON object string)
-- `images` (repeated file field, min 1, max `ML_MAX_IMAGES`)
+- `condition` (opcional, por defecto `new`)
+- `listing_type_id` (opcional)
+- `buying_mode` (opcional)
+- `attributes` (string JSON con array de atributos)
+- `shipping` (opcional, string JSON con objeto)
+- `images` (campo de archivo repetido, mínimo 1, máximo `ML_MAX_IMAGES`)
 
-Example:
+Ejemplo:
 ```bash
 curl -X POST http://localhost:3000/products/publish \
   -F 'title=Campera deportiva bomber unisex' \
-  -F 'description=Campera deportiva tipo bomber, calce regular, ideal uso urbano y entrenamiento. Producto genérico, sin licencia de marcas.' \
+  -F 'description=Campera deportiva tipo bomber, calce regular, ideal para uso urbano y entrenamiento. Producto genérico, sin licencia de marcas.' \
   -F 'price=199990' \
   -F 'currency=ARS' \
   -F 'available_quantity=1' \
   -F 'category_id=MLA424837' \
   -F 'attributes=[{"id":"BRAND","value_name":"Generica"},{"id":"MODEL","value_name":"Bomber unisex"},{"id":"GENDER","value_name":"Sin género"},{"id":"COLOR","value_name":"Negro"},{"id":"SIZE","value_name":"L"}]' \
-  -F 'images=@/absolute/path/photo-1.jpg' \
-  -F 'images=@/absolute/path/photo-2.jpg'
+  -F 'images=@/ruta/absoluta/photo-1.jpg' \
+  -F 'images=@/ruta/absoluta/photo-2.jpg'
 ```
 
-Success response:
+Respuesta exitosa:
 ```json
 {
   "status": "success",
@@ -223,27 +225,28 @@ Success response:
 }
 ```
 
-## 7. Image requirements and recommendations
-- Use real JPEG/PNG/WebP files.
-- Avoid HEIC/HEIF files renamed as `.jpg`.
-- If your phone photos are HEIC, convert before upload.
+## 7. Requisitos y recomendaciones para imágenes
+- Usa archivos reales en formato `JPEG`, `PNG` o `WebP`
+- Evita archivos `HEIC/HEIF` renombrados como `.jpg`
+- Si las fotos de tu teléfono están en `HEIC`, conviértelas antes de subirlas
 
-If image is unsupported you will get:
-- `UNSUPPORTED_IMAGE_FORMAT` or `UNSUPPORTED_IMAGE_CONTENT`
+Si la imagen no es válida, la API devuelve alguno de estos errores:
+- `UNSUPPORTED_IMAGE_FORMAT`
+- `UNSUPPORTED_IMAGE_CONTENT`
 
-## 8. Error format
-All errors follow:
+## 8. Formato de errores
+Todas las respuestas de error siguen este formato:
 
 ```json
 {
   "status": "error",
   "code": "ERROR_CODE",
-  "message": "Human readable message",
+  "message": "Mensaje descriptivo",
   "details": {}
 }
 ```
 
-Common codes:
+Códigos comunes:
 - `VALIDATION_ERROR`
 - `INVALID_CONTENT_TYPE`
 - `MISSING_IMAGES`
@@ -257,49 +260,53 @@ Common codes:
 - `EXTERNAL_API_ERROR`
 - `INTERNAL_SERVER_ERROR`
 
-## 9. Troubleshooting
+## 9. Resolución de problemas
 
-### 403 unauthorized from MercadoLibre
-- Your `ML_ACCESS_TOKEN` is invalid or expired.
-- Refresh token and update `.env`.
-- Validate token quickly:
+### Error `403 unauthorized` desde MercadoLibre
+- Tu `ML_ACCESS_TOKEN` es inválido o venció
+- Refresca el token y actualiza el `.env`
+- Puedes validarlo así:
+
 ```bash
-curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" https://api.mercadolibre.com/users/me
+curl -H "Authorization: Bearer TU_ACCESS_TOKEN" https://api.mercadolibre.com/users/me
 ```
 
-### Missing required attributes
-- Query required attributes for selected category:
+### Faltan atributos obligatorios
+- Consulta los atributos requeridos de la categoría:
+
 ```bash
 curl "http://localhost:3000/categories/MLA424837/required-attributes"
 ```
-- Send all required `attributes`.
 
-### Image uploads look wrong
-- Ensure files are not HEIC disguised as JPG.
-- Convert on macOS:
+- Envía todos los atributos requeridos en `attributes`
+
+### Las imágenes se suben mal o aparecen negras
+- Verifica que no sean archivos `HEIC` disfrazados de `.jpg`
+- Convierte la imagen antes de subirla
+
+En macOS:
 ```bash
-sips -s format jpeg /path/input.heic --out /path/output.jpg
+sips -s format jpeg /ruta/imagen.heic --out /ruta/imagen.jpg
 ```
 
-## 10. NPM scripts
-- `npm run dev` -> run in dev with watch
-- `npm run typecheck` -> TS no emit checks
-- `npm run build` -> build to `dist/`
-- `npm run start` -> run compiled server
+## 10. Scripts disponibles
+- `npm run dev` -> ejecuta el servidor en desarrollo con watch
+- `npm run typecheck` -> valida TypeScript sin compilar
+- `npm run build` -> compila a `dist/`
+- `npm run start` -> ejecuta la versión compilada
 
-## 11. Project structure
-- `src/modules/auth/token-manager.ts` -> access/refresh token logic
-- `src/modules/mercadolibre/client.ts` -> ML API client with retry on 401
-- `src/modules/images/image-uploader.ts` -> image validation/upload pipeline
-- `src/modules/categories/category-service.ts` -> category helpers
-- `src/modules/publishing/product-publisher.ts` -> publish orchestration
-- `src/modules/validation/*` -> request and payload validation
-- `src/routes/*` -> HTTP routes
-- `src/app.ts` -> app wiring and error handler
-- `src/server.ts` -> process entrypoint
+## 11. Estructura del proyecto
+- `src/modules/auth/token-manager.ts` -> manejo de `access_token` y `refresh_token`
+- `src/modules/mercadolibre/client.ts` -> cliente de MercadoLibre con reintento en `401`
+- `src/modules/images/image-uploader.ts` -> validación y carga de imágenes
+- `src/modules/categories/category-service.ts` -> helpers de categorías
+- `src/modules/publishing/product-publisher.ts` -> lógica de publicación
+- `src/modules/validation/*` -> validación de requests y payloads
+- `src/routes/*` -> endpoints HTTP
+- `src/app.ts` -> configuración de Fastify y manejo global de errores
+- `src/server.ts` -> entrada principal del servidor
 
-## 12. Security notes
-- Never commit `.env`.
-- Rotate tokens if exposed.
-- Use HTTPS in production.
-
+## 12. Seguridad
+- No subas `.env` al repositorio
+- Rota tus tokens si fueron expuestos
+- Usa HTTPS en producción
